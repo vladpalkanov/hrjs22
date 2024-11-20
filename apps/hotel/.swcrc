@@ -1,0 +1,15 @@
+{
+  "jsc": {
+    "target": "esnext", // Output modern JavaScript
+    "parser": {
+      "syntax": "typescript", // Tell SWC to parse TypeScript files
+      "tsx": false
+    }
+  },
+  "module": {
+    "type": "es6", // Use ES6 module syntax for output
+    "strict": true
+  },
+  "sourceMaps": false, // Disable source maps for production
+  "minify": true, // Minify the output for production
+}
