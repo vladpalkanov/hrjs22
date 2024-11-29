@@ -1,8 +1,7 @@
 import mongoose from "mongoose";
-import { TUser } from "./types/user";
+import { User } from "./types/user";
 
-const userSchema = new mongoose.Schema<TUser>({
-  id: { type: String, required: true },
+const userSchema = new mongoose.Schema<User>({
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
   password: { type: String, required: true },
@@ -12,4 +11,4 @@ const userSchema = new mongoose.Schema<TUser>({
   updatedAt: { type: String, required: true },
 });
 
-export const User = mongoose.model("User", userSchema);
+export const UserModel = mongoose.model("User", userSchema);

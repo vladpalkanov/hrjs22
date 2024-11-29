@@ -3,7 +3,7 @@ import { logger } from "./loggerConfig";
 
 export async function connectDB() {
   try {
-    const link = process.env.MONGODB_LINK;
+    const link = process.env.MONGO_URI;
     if (!link) {
       throw new Error("MONGODB_LINK environment variable is not defined");
     }

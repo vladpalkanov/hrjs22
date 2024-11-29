@@ -10,7 +10,6 @@ const app = express();
 connectDB();
 
 app.use(express.json());
-// app.use(pino({ logger }));
 
 app.use("/api/users", router);
 

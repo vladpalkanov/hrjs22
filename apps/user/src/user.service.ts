@@ -1,5 +1,5 @@
-import { User } from "./user.model";
-import { TUser } from "./types/user";
+import { UserModel } from "./user.model";
+import {  User } from "./types/user";
 import {
   UndefinedUserError,
   UsedEmailError,
@@ -13,10 +13,10 @@ import {
 import { logger } from "./config/loggerConfig";
 
 export async function getAllUsersService() {
-  return User.find({});
+  return UserModel.find({});
 }
 
-export async function createUserService(userData: TUser) {
+export async function createUserService(userData:  User) {
   const { email, password } = userData;
 
   const validationResult = userSchemaValidation.safeParse(userData);
@@ -25,7 +25,7 @@ export async function createUserService(userData: TUser) {
     throw new ValidationError("Invalid user data");
   }
 
-  const doesUserExist = await User.findOne({ email });
+  const doesUserExist = await UserModel.findOne({ email });
   if (doesUserExist) {
     logger.error("Email is already in use");
     throw new UsedEmailError();
@@ -35,13 +35,12 @@ export async function createUserService(userData: TUser) {
 
   const user = {
     ...userData,
-    id: crypto.randomUUID(),
     password: hashedPassword,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
 
-  const newUser = new User(user);
+  const newUser = new UserModel(user);
   await newUser.save();
 
   logger.info({ user }, "User created successfully");
@@ -50,7 +49,7 @@ export async function createUserService(userData: TUser) {
 }
 
 export async function getUserByIDService(id: string) {
-  const user = await User.findOne({ id });
+  const user = await UserModel.findOne({ "_id": id });
   if (!user) {
     logger.error("The user does not exist");
     throw new UndefinedUserError();
@@ -58,15 +57,15 @@ export async function getUserByIDService(id: string) {
   return user;
 }
 
-export async function updateUserByIDService(id: string, userData: TUser) {
+export async function updateUserByIDService(id: string, userData:  User) {
   const validationResult = userUpdateSchemaValidation.safeParse(userData);
   if (!validationResult.success) {
     logger.error("Invalid user data");
     throw new ValidationError("Invalid user data");
   }
 
-  const user = await User.findOneAndUpdate(
-    { id },
+  const user = await UserModel.findOneAndUpdate(
+    { "_id": id },
     { ...userData, updatedAt: new Date().toISOString() },
     { new: true },
   );
@@ -81,7 +80,7 @@ export async function updateUserByIDService(id: string, userData: TUser) {
 }
 
 export async function deleteUserByIdService(id: string) {
-  const result = await User.deleteOne({ id });
+  const result = await UserModel.deleteOne({ "_id": id });
 
   if (!result.deletedCount) {
     logger.error("The user does not exist");
