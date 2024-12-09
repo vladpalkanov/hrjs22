@@ -1,20 +1,15 @@
 import express from "express";
-import { router } from "./user.routes";
-import { connectDB } from "./config/dbConfig";
-import dotenv from "dotenv";
-
-dotenv.config();
 
 const app = express();
 
-connectDB();
+const router = express.Router();
 
-app.use(express.json());
+router.get("/", (_req, res) => {
+  res.send("User page");
+});
 
-app.use("/api/users", router);
+app.use("/user", router);
 
-const port = Number(process.env.PORT) || 3000;
-
-app.listen(port, "127.0.0.1", () => {
-  console.log("The server is listening the port:" + port);
+app.listen(3000, "127.0.0.1", () => {
+  console.log("The server is listening the port:" + 3000);
 });
