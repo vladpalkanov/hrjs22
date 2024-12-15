@@ -3,10 +3,10 @@ import { BookingService } from './booking.service';
 
 @Controller()
 export class BookingController {
-  constructor(private readonly appService: BookingService) {}
+  constructor(private readonly bookingService: BookingService) {}
 
   @Get()
   getHello(): string {
-    return this.appService.getHello();
+    return this.bookingService.getHello();
   }
 }
