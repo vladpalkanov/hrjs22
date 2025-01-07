@@ -1,12 +1,46 @@
-import { Controller, Get } from "@nestjs/common";
-import { RoomService } from "./room.service";
+import {
+  Controller,
+  Post,
+  Get,
+  Put,
+  Delete,
+  Param,
+  Body,
+  Query,
+} from '@nestjs/common';
+import { RoomService } from './room.service';
+import { Room } from './room.schema';
 
-@Controller()
+@Controller('api/hotels/:hotelId/rooms')
 export class RoomController {
-  constructor(private readonly appService: RoomService) {}
+  constructor(private readonly roomService: RoomService) {}
+
+  @Post()
+  createRoom(@Param('hotelId') hotelId: number, @Body() roomData: Partial<Room>) {
+    return this.roomService.createRoom(hotelId, roomData);
+  }
+
+  @Get(':roomId')
+  getRoomById(@Param('hotelId') hotelId: number, @Param('roomId') roomId: string) {
+    return this.roomService.getRoomById(hotelId, roomId);
+  }
+
+  @Put(':roomId')
+  updateRoom(
+      @Param('hotelId') hotelId: number,
+      @Param('roomId') roomId: string,
+      @Body() updateData: Partial<Room>,
+  ) {
+    return this.roomService.updateRoom(hotelId, roomId, updateData);
+  }
+
+  @Delete(':roomId')
+  deleteRoom(@Param('hotelId') hotelId: number, @Param('roomId') roomId: string) {
+    return this.roomService.deleteRoom(hotelId, roomId);
+  }
 
   @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  listRooms(@Param('hotelId') hotelId: number, @Query() filters: any) {
+    return this.roomService.listRooms(hotelId, filters);
   }
 }
