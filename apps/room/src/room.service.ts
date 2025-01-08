@@ -1,64 +1,56 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, isValidObjectId } from 'mongoose';
-import { Room } from './room.schema';
+import { Injectable, BadRequestException } from "@nestjs/common";
+import { InjectModel } from "@nestjs/mongoose";
+import { Model } from "mongoose";
+import { Room } from "./room.schema";
 
 @Injectable()
 export class RoomService {
   constructor(@InjectModel(Room.name) private roomModel: Model<Room>) {}
 
-  async createRoom(hotelId: number, roomData: Partial<Room>): Promise<Room> {
-    const newRoom = new this.roomModel({ ...roomData, hotelId });
-    return newRoom.save();
+  async createRoom(hotelId: number, roomData: Partial<Room>) {
+    if (!roomData.roomNumber || !roomData.roomType) {
+      throw new BadRequestException("Room number and type are required.");
+    }
+    const newRoom = new this.roomModel({ hotelId, ...roomData });
+    return await newRoom.save();
   }
 
-  async getRoomById(hotelId: number, roomId: string): Promise<Room> {
-    if (!isValidObjectId(roomId)) {
-      throw new NotFoundException('Invalid roomId');
-    }
-    const room = await this.roomModel.findOne({ hotelId, _id: roomId }).exec();
-    if (!room) {
-      throw new NotFoundException('Room not found');
-    }
-    return room;
+  async getRoomById(hotelId: number, roomId: string) {
+    return await this.roomModel.findOne({ hotelId, _id: roomId });
   }
 
-  async updateRoom(
-      hotelId: number,
-      roomId: string,
-      updateData: Partial<Room>,
-  ): Promise<Room> {
-    if (!isValidObjectId(roomId)) {
-      throw new NotFoundException('Invalid roomId');
+  async updateRoom(hotelId: number, roomId: string, updateData: Partial<Room>) {
+    if (!updateData) {
+      throw new BadRequestException("Update data cannot be empty.");
     }
-    const updatedRoom = await this.roomModel
-        .findOneAndUpdate({ hotelId, _id: roomId }, updateData, { new: true })
-        .exec();
-    if (!updatedRoom) {
-      throw new NotFoundException('Room not found');
-    }
-    return updatedRoom;
+    return await this.roomModel.findOneAndUpdate(
+      { hotelId, _id: roomId },
+      updateData,
+      { new: true },
+    );
   }
 
-  async deleteRoom(hotelId: number, roomId: string): Promise<void> {
-    if (!isValidObjectId(roomId)) {
-      throw new NotFoundException('Invalid roomId');
-    }
-    const result = await this.roomModel
-        .findOneAndDelete({ hotelId, _id: roomId })
-        .exec();
-    if (!result) {
-      throw new NotFoundException('Room not found');
-    }
+  async deleteRoom(hotelId: number, roomId: string) {
+    return await this.roomModel.findOneAndDelete({ hotelId, _id: roomId });
   }
 
-  async listRooms(
-      hotelId: number,
-      filters: any,
-  ): Promise<{ rooms: Room[]; total: number }> {
-    const query = { hotelId, ...filters };
-    const rooms = await this.roomModel.find(query).exec();
-    const total = await this.roomModel.countDocuments(query).exec();
-    return { rooms, total };
+  async listRooms(hotelId: number, filters: any) {
+    const matchStage = { hotelId, ...filters };
+
+    const aggregationResult = await this.roomModel.aggregate([
+      { $match: matchStage },
+      {
+        $facet: {
+          data: [{ $skip: filters.skip ?? 0 }, { $limit: filters.limit ?? 10 }],
+          totalCount: [{ $count: "count" }],
+        },
+      },
+    ]);
+
+    const [result] = aggregationResult;
+    return {
+      rooms: result.data,
+      total: result.totalCount[0]?.count ?? 0,
+    };
   }
 }
