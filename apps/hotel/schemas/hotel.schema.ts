@@ -36,5 +36,5 @@ export const HotelSchema = new Schema<Hotel>(
     },
     rating: { type: Number, default: 0 },
   },
-  { timestamps: true } // Automatically adds createdAt and updatedAt fields
+  { timestamps: true }
 );
