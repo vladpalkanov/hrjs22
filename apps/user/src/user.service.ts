@@ -1,5 +1,5 @@
 import { UserModel } from "./user.model";
-import {  User } from "./types/user";
+import { User } from "./types/user";
 import {
   UndefinedUserError,
   UsedEmailError,
