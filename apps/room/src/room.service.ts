@@ -5,7 +5,7 @@ import { Room } from "./room.schema";
 
 @Injectable()
 export class RoomService {
-  constructor(@InjectModel(Room.name) private roomModel: Model<Room>) {}
+  constructor(@InjectModel('Room') private roomModel: Model<Room>) {}
 
   async createRoom(hotelId: number, roomData: Partial<Room>) {
     if (!roomData.roomNumber || !roomData.roomType) {
