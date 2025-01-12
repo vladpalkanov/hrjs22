@@ -1,9 +1,9 @@
 export class UsedEmailError extends Error {
   constructor() {
-    super("Email is already in use");
+    super('Email is already in use');
   }
 
-  name = "UsedEmailError"
+  name = 'UsedEmailError';
 }
 
 export class ValidationError extends Error {
@@ -11,12 +11,12 @@ export class ValidationError extends Error {
     super(message);
   }
 
-  name = "ValidationError";
+  name = 'ValidationError';
 }
 
 export class UndefinedUserError extends Error {
   constructor() {
-    super("The user does not exist");
+    super('The user does not exist');
   }
-  name = "UndefinedUserError"
+  name = 'UndefinedUserError';
 }

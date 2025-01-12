@@ -1,93 +1,64 @@
-import { UserModel } from "./user.model";
-import { User } from "./types/user";
-import {
-  UndefinedUserError,
-  UsedEmailError,
-  ValidationError,
-} from "./utils/errors";
-import { hashPassword } from "./utils/hashPassword";
-import {
-  userSchemaValidation,
-  userUpdateSchemaValidation,
-} from "./utils/userSchemaValidation";
-import { logger } from "./config/loggerConfig";
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { User } from './user.schema';
+import { Model } from 'mongoose';
+import { UndefinedUserError, UsedEmailError } from './utils/errors';
+import { hashPassword } from './utils/hashPassword';
 
-export async function getAllUsersService() {
-  return UserModel.find({});
-}
+@Injectable()
+export class UserService {
+  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
-export async function createUserService(userData:  User) {
-  const { email, password } = userData;
-
-  const validationResult = userSchemaValidation.safeParse(userData);
-  if (!validationResult.success) {
-    logger.error("Invalid user data");
-    throw new ValidationError("Invalid user data");
+  async getAllUsers() {
+    return this.userModel.find().exec();
   }
 
-  const doesUserExist = await UserModel.findOne({ email });
-  if (doesUserExist) {
-    logger.error("Email is already in use");
-    throw new UsedEmailError();
+  async createUser(userData: User) {
+    const { email, password } = userData;
+
+    const doesUserExist = await this.userModel.findOne({ email });
+    if (doesUserExist) {
+      throw new UsedEmailError();
+    }
+    const hashedPassword = await hashPassword(password);
+
+    const user = {
+      ...userData,
+      password: hashedPassword,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const newUser = new this.userModel(user);
+    await newUser.save();
+
+    return newUser;
   }
 
-  const hashedPassword = await hashPassword(password);
-
-  const user = {
-    ...userData,
-    password: hashedPassword,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-
-  const newUser = new UserModel(user);
-  await newUser.save();
-
-  logger.info({ user }, "User created successfully");
-
-  return newUser;
-}
-
-export async function getUserByIDService(id: string) {
-  const user = await UserModel.findOne({ "_id": id });
-  if (!user) {
-    logger.error("The user does not exist");
-    throw new UndefinedUserError();
-  }
-  return user;
-}
-
-export async function updateUserByIDService(id: string, userData:  User) {
-  const validationResult = userUpdateSchemaValidation.safeParse(userData);
-  if (!validationResult.success) {
-    logger.error("Invalid user data");
-    throw new ValidationError("Invalid user data");
+  async getUserByID(id: string) {
+    const user = await this.userModel.findById(id).exec();
+    if (!user) {
+      throw new UndefinedUserError();
+    }
+    return user;
   }
 
-  const user = await UserModel.findOneAndUpdate(
-    { "_id": id },
-    { ...userData, updatedAt: new Date().toISOString() },
-    { new: true },
-  );
-  if (!user) {
-    logger.error("The user does not exist");
-    throw new UndefinedUserError();
+  async updateUser(id: string, updateUserDto: Partial<User>) {
+    const user = await this.userModel
+      .findByIdAndUpdate(id, updateUserDto, { new: true })
+      .exec();
+
+    if (!user) {
+      throw new UndefinedUserError();
+    }
+    return user;
   }
 
-  logger.info({ user }, "User updated successfully");
+  async deleteUser(id: string) {
+    const result = await this.userModel.deleteOne({ _id: id });
 
-  return user;
-}
-
-export async function deleteUserByIdService(id: string) {
-  const result = await UserModel.deleteOne({ "_id": id });
-
-  if (!result.deletedCount) {
-    logger.error("The user does not exist");
-    throw new UndefinedUserError();
+    if (!result.deletedCount) {
+      throw new UndefinedUserError();
+    }
   }
-
-  logger.info("User deleted successfully");
-
-  return result;
 }
